@@ -1,0 +1,164 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import warnings
+warnings.filterwarnings('ignore')
+
+# Load dataset
+df = pd.read_csv('notebook/data/stud.csv')
+
+# 🔥 Clean column names properly
+df.columns = df.columns.str.strip()
+df.columns = df.columns.str.replace(" ", "_")
+df.columns = df.columns.str.replace("/", "_")
+
+print(df.columns)  # Always check once
+
+print(df.head())
+print(df.isna().sum())
+print(df.shape)
+print(df.nunique())
+print(df.info())
+print(df.describe())
+
+# Unique categories
+print("Categories in 'gender': ", df['gender'].unique())
+print("Categories in 'race_ethnicity': ", df['race_ethnicity'].unique())
+print("Categories in 'parental_level_of_education': ", df['parental_level_of_education'].unique())
+print("Categories in 'lunch': ", df['lunch'].unique())
+print("Categories in 'test_preparation_course': ", df['test_preparation_course'].unique())
+
+# Feature separation
+numeric_features = [col for col in df.columns if df[col].dtype != 'O']
+categorical_features = [col for col in df.columns if df[col].dtype == 'O']
+
+print("Numerical features:", numeric_features)
+print("Categorical features:", categorical_features)
+
+# Create total & average
+df['total_score'] = df['math_score'] + df['reading_score'] + df['writing_score']
+df['average'] = df['total_score'] / 3
+
+# ================= HISTOGRAMS =================
+
+fig, axs = plt.subplots(1, 2, figsize=(15, 7))
+sns.histplot(data=df, x='average', bins=30, kde=True, ax=axs[0])
+sns.histplot(data=df, x='average', kde=True, hue='gender', ax=axs[1])
+plt.show()
+
+fig, axs = plt.subplots(1, 2, figsize=(15, 7))
+sns.histplot(data=df, x='total_score', bins=30, kde=True, ax=axs[0])
+sns.histplot(data=df, x='total_score', kde=True, hue='gender', ax=axs[1])
+plt.show()
+
+# Lunch comparison
+plt.figure(figsize=(20,6))
+sns.histplot(data=df, x='average', kde=True, hue='lunch')
+plt.show()
+
+# Parental Education comparison
+plt.figure(figsize=(20,6))
+sns.histplot(data=df, x='average', kde=True, hue='parental_level_of_education')
+plt.show()
+
+# Race comparison
+plt.figure(figsize=(20,6))
+sns.histplot(data=df, x='average', kde=True, hue='race_ethnicity')
+plt.show()
+
+# ================= VIOLIN PLOTS =================
+
+plt.figure(figsize=(18,6))
+plt.subplot(1,3,1)
+sns.violinplot(y='math_score', data=df)
+
+plt.subplot(1,3,2)
+sns.violinplot(y='reading_score', data=df)
+
+plt.subplot(1,3,3)
+sns.violinplot(y='writing_score', data=df)
+plt.show()
+
+# ================= PIE CHARTS =================
+
+plt.figure(figsize=(20,6))
+
+plt.subplot(1,4,1)
+df['gender'].value_counts().plot.pie(autopct='%1.1f%%')
+plt.title("Gender")
+
+plt.subplot(1,4,2)
+df['race_ethnicity'].value_counts().plot.pie(autopct='%1.1f%%')
+plt.title("Race")
+
+plt.subplot(1,4,3)
+df['lunch'].value_counts().plot.pie(autopct='%1.1f%%')
+plt.title("Lunch")
+
+plt.subplot(1,4,4)
+df['parental_level_of_education'].value_counts().plot.pie(autopct='%1.1f%%')
+plt.title("Parental Education")
+
+plt.show()
+
+# ================= GROUP ANALYSIS =================
+
+gender_group = df.groupby('gender').mean(numeric_only=True)
+
+plt.figure(figsize=(8,6))
+X = ['Average', 'Math']
+
+female_scores = [
+    gender_group.loc['female','average'],
+    gender_group.loc['female','math_score']
+]
+
+male_scores = [
+    gender_group.loc['male','average'],
+    gender_group.loc['male','math_score']
+]
+
+X_axis = np.arange(len(X))
+
+plt.bar(X_axis - 0.2, male_scores, 0.4, label='Male')
+plt.bar(X_axis + 0.2, female_scores, 0.4, label='Female')
+
+plt.xticks(X_axis, X)
+plt.ylabel("Marks")
+plt.title("Average vs Math Score by Gender")
+plt.legend()
+plt.show()
+
+# ================= COUNT PLOTS =================
+
+plt.figure(figsize=(8,6))
+sns.countplot(x='parental_level_of_education', data=df)
+plt.xticks(rotation=45)
+plt.show()
+
+plt.figure(figsize=(8,6))
+sns.countplot(x='lunch', data=df)
+plt.show()
+
+# ================= BOX PLOTS =================
+
+plt.figure(figsize=(16,5))
+plt.subplot(141)
+sns.boxplot(x=df['math_score'])
+
+plt.subplot(142)
+sns.boxplot(x=df['reading_score'])
+
+plt.subplot(143)
+sns.boxplot(x=df['writing_score'])
+
+plt.subplot(144)
+sns.boxplot(x=df['average'])
+
+plt.show()
+
+# ================= PAIRPLOT =================
+
+sns.pairplot(df, hue='gender')
+plt.show()
